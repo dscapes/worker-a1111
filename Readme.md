@@ -4,10 +4,10 @@
 {
     "input": {
         "port": 17860,
-        "method": "post",
+        "method": "POST",
         "path": "/sdapi/v1/txt2img",
         "body": {
-            "prompt": "a photo of a cat",
+            "prompt": "a photo of a cat"
         }
     }
 }

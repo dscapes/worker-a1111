@@ -37,23 +37,23 @@ def download_and_save(url, save_dir, save_filename):
         print(f"Error downloading file: {str(e)}")
         return None
 
-def wait_for_server(port, max_retries=30, delay=1):
+def wait_for_server(port, max_retries=300, delay=1):
     '''
-    Ждём, пока сервер станет доступен.
-    max_retries: максимальное количество попыток
-    delay: задержка между попытками в секундах
+    Wait for the server to become available.
+    max_retries: maximum number of attempts
+    delay: delay between attempts in seconds
     '''
     for attempt in range(max_retries):
         try:
             response = requests.get(f"http://127.0.0.1:{port}/internal/ping")
             if response.status_code == 200:
-                print(f"Сервер доступен после {attempt + 1} попыток")
+                print(f"Server is available after {attempt + 1} attempts")
                 return True
         except requests.exceptions.RequestException:
-            print(f"Ожидание сервера, попытка {attempt + 1}/{max_retries}")
+            print(f"Waiting for the server, attempt {attempt + 1}/{max_retries}")
             time.sleep(delay)
     
-    raise TimeoutError(f"Сервер не запустился после {max_retries} попыток")
+    raise TimeoutError(f"Server did not start after {max_retries} attempts")
 
 def run(job):
     '''
@@ -85,7 +85,7 @@ def run(job):
     elif job_method == "UPLOAD":
         files = job_input.get('files', [])
         if isinstance(files, str):
-            files = [files]  # преобразуем строку в список, если передан один файл
+            files = [files]  # convert string to list if a single file is passed
             
         target_url = job_input.get('target_url')
         auth_token = job_input.get('auth_token')
