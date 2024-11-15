@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  wrapped-api:
+    image: ghcr.io/ai-dock/stable-diffusion-webui:latest
+    container_name: wrapped-api-container
+    environment:
+      - WEBUI_BRANCH=master
+      - WEBUI_ARGS="--xformers --no-half-vae"
+      - WORKSPACE=/workspace
+      - PROVISIONING_SCRIPT=https://raw.githubusercontent.com/dscapes/runpod/refs/heads/main/test/default.sh
+      - WEB_USER=user
+      - WEB_PASSWORD=password
+      - AUTO_UPDATE=false
+      - WORKSPACE_SYNC=false
+      - SYNCTHING_TRANSPORT_PORT_HOST=72299
+
+    ports:
+      - "17860:17860"  # порты для API A1111 SD Web UI
+      # 1111 - Service Portal
+      # 7860 - A1111 SD Web UI
+      # 8384 - Syncthing (File Sync)
+      # 8888 - Jupyter Notebook
+
+  api-wrapper:
+    build: .
+    container_name: api-wrapper-container
+    depends_on:
+      - wrapped-api
+    networks:
+      - my-network
+    environment:
+      - WRAPPER_ENV_VAR=value3
+      - ADDITIONAL_VAR=value4
+
+networks:
+  my-network:
+    driver: bridge
