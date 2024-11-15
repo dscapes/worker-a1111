@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Compose CI
 
 on:
   push:
@@ -11,15 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DOCKER_BUILDKIT: 1
+      DOCKER_COMPOSE_VERSION: 1.29.2
       IMAGE_NAME: runpod-worker-a1111
-      DOCKERFILE_PATH: Dockerfile
       DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       CIVITAI_TOKEN: ${{ secrets.CIVITAI_TOKEN }}
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+
+    - name: Set up Docker Compose
+      run: |
+        sudo curl -L "https://github.com/docker/compose/releases/download/${{ env.DOCKER_COMPOSE_VERSION }}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        docker-compose --version
 
     - name: Clean up disk space
       run: |
@@ -33,8 +38,11 @@ jobs:
     - name: Login to DockerHub
       run: echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
-    - name: Build Docker image
-      run: docker build --build-arg CIVITAI_TOKEN=${CIVITAI_TOKEN} -t ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest .
+    - name: Build and run Docker Compose
+      run: |
+        docker-compose -f docker-compose.yml build
+        docker-compose -f docker-compose.yml up -d
 
-    - name: Push Docker image
-      run: docker push ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+    - name: Push Docker images (if necessary)
+      run: |
+        docker-compose -f docker-compose.yml push
