@@ -1,4 +1,7 @@
-FROM python:3.9-slim
+# Base image
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 ARG CIVITAI_TOKEN
 ENV CIVITAI_TOKEN=${CIVITAI_TOKEN}
@@ -6,9 +9,8 @@ ENV CIVITAI_TOKEN=${CIVITAI_TOKEN}
 # Use bash shell with pipefail option
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+# Set the working directory
 WORKDIR /
-
-COPY requirements.txt .
 
 # Update and upgrade the system packages (Worker Template)
 RUN apt-get update -y && \
@@ -17,14 +19,21 @@ RUN apt-get update -y && \
     build-essential vim git wget ffmpeg libsm6 libxext6
 
 # Update and upgrade the system packages (Worker Template)
-# COPY builder/setup.sh /setup.sh
-# RUN /bin/bash /setup.sh && \
-#     rm /setup.sh
+COPY builder/setup.sh /setup.sh
+RUN /bin/bash /setup.sh && \
+    rm /setup.sh
 
 # Install Python dependencies (Worker Template)
+COPY builder/requirements.txt /requirements.txt
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install --upgrade -r /requirements.txt --no-cache-dir && \
     rm /requirements.txt
+
+# Create directories for models
+# RUN mkdir -p /workspace/models/diffusers-cache \
+#     /workspace/models/esrgan \
+#     /workspace/models/lora \
+#     /workspace/models/embeddings
 
 # Add src files (Worker Template)
 ADD src .
