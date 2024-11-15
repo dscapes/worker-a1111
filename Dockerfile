@@ -26,7 +26,6 @@ RUN /bin/bash /setup.sh && \
     rm /setup.sh
 
 # Install Python dependencies (Worker Template)
-COPY builder/requirements.txt /requirements.txt
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install --upgrade -r /requirements.txt --no-cache-dir && \
     rm /requirements.txt
