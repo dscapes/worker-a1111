@@ -32,7 +32,7 @@ RUN python3 -m pip install --upgrade pip && \
     rm /requirements.txt
 
 # Копируем скрипт wrapper.py и другие нужные файлы в контейнер
-COPY wrapper.py .
+COPY src/wrapper.py .
 
 # Открываем необходимые порты (если нужно)
 EXPOSE 8080
