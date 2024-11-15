@@ -3,6 +3,7 @@ import argparse
 #import base64
 import requests
 from urllib.parse import urlparse
+import time
 
 import runpod
 #from runpod.serverless.utils.rp_validator import validate
@@ -36,6 +37,24 @@ def download_and_save(url, save_dir, save_filename):
         print(f"Error downloading file: {str(e)}")
         return None
 
+def wait_for_server(port, max_retries=30, delay=1):
+    '''
+    Ждём, пока сервер станет доступен.
+    max_retries: максимальное количество попыток
+    delay: задержка между попытками в секундах
+    '''
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(f"http://127.0.0.1:{port}/internal/ping")
+            if response.status_code == 200:
+                print(f"Сервер доступен после {attempt + 1} попыток")
+                return True
+        except requests.exceptions.RequestException:
+            print(f"Ожидание сервера, попытка {attempt + 1}/{max_retries}")
+            time.sleep(delay)
+    
+    raise TimeoutError(f"Сервер не запустился после {max_retries} попыток")
+
 def run(job):
     '''
     Run inference on the model.
@@ -54,10 +73,12 @@ def run(job):
     if job_method == "DOWNLOAD":
         return download_and_save(job_input['url'], job_input['save_dir'], job_input['save_filename'])
     elif job_method == "GET":
+        wait_for_server(job_port)
         response = requests.get(f"http://127.0.0.1:{job_port}{job_path}")
         response.raise_for_status()
         return response.json()
     elif job_method == "POST":
+        wait_for_server(job_port)
         response = requests.post(f"http://127.0.0.1:{job_port}{job_path}", json=job_input['body'])
         response.raise_for_status()
         return response.json()
